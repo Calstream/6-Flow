@@ -31,6 +31,13 @@ private:
 	vector<mage> mages;
 	vector<edge> adj; // 
 
+	void make_f_sink()
+	{
+		for (int i = 1; i < mages_n; i++)
+			adj.push_back({mages_n, i, -1, mages[i].req_e, -1});
+	}
+
+
 public:
 	Graph()
 	{
@@ -55,14 +62,11 @@ public:
 				input >> tc;
 				adj.push_back({tt, i, -1, tc, -1});
 			}
-			if (mages[i].dg)
-			{
-				adj.push_back({ mages_n, i, -1, INT_MAX, -1 });
-			}
+
+			//if (mages[i].dg)
+			//	adj.push_back({ mages_n, i, -1, INT_MAX, -1 });
 		}
-
 		input.close();
-
 	}
 
 	void out()
