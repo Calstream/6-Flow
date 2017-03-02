@@ -1,225 +1,179 @@
-//#include<fstream>
-//#include<vector>
-//#include<climits>
-//#include<iterator>
-//#include<list>
-//#include<algorithm>
-//
-//using namespace std;
-//
-//string const iname = "input.txt";
-//string const oname = "output.txt";
-//
-//class Graph
-//{
-//private:
-//	struct edge
-//	{
-//		int to;
-//		int flow;
-//		int cap;
-//		int rev; // rev --
-//	};
-//
-//	struct mage
-//	{
-//		int req_e;
-//		bool dg;
-//		int n;
-//	};
-//
-//	// A DFS based function to send flow after BFS has
-//	// figured out that there is a possible flow and
-//	// constructed levels. This function called multiple
-//	// times for a single call of BFS.
-//	// flow : Current flow send by parent function call
-//	// start[] : To keep track of next edge to be explored.
-//	//           start[i] stores  count of edges explored
-//	//           from i.
-//	//  u : Current vertex
-//	//  t : Sink
-//
-//	int sendFlow(int u, int flow, int t, int start[])
-//	{
-//		// Sink reached
-//		if (u == t)
-//			return flow;
-//
-//		// Traverse all adjacent edges one -by - one.
-//		for (; start[u] < adj[u].size(); start[u]++)
-//		{
-//			// Pick next edge from adjacency list of u
-//			edge &e = adj[u][start[u]];
-//
-//			if (levels[e.to] == levels[u] + 1 && e.flow < e.cap)
-//			{
-//				// find minimum flow from u to t
-//				int curr_flow = min(flow, e.cap - e.flow);
-//
-//				int temp_flow = sendFlow(e.to, curr_flow, t, start);
-//
-//				// flow is greater than zero
-//				if (temp_flow > 0)
-//				{
-//					// add flow  to current edge
-//					e.flow += temp_flow;
-//
-//					// subtract flow from reverse edge
-//					// of current edge
-//					adj[e.to][e.rev].flow -= temp_flow;
-//					return temp_flow;
-//				}
-//			}
-//		}
-//
-//		return 0;
-//	}
-//
-//	int mages_n; // number of mages - G
-//	vector<int> levels;
-//	vector<mage> mages;
-//	vector<vector<edge>> adj; // 
-//
-//	void make_f_sink()
-//	{
-//		for (int i = 1; i < mages_n; i++)
-//			add_edge_and_rev(i, mages_n, INT_MAX);
-//			//adj[i].push_back({mages_n, 0, mages[i].req_e, 0});
-//	}
-//
-//	bool BFS(int s, int t)
-//	{
-//		for (int i = 0; i < mages_n; i++) // careful!
-//			levels[i] = -1;
-//
-//		levels[s] = 0;  // Level of source vertex
-//
-//					   // Create a queue, enqueue source vertex
-//					   // and mark source vertex as visited here
-//					   // level[] array works as visited array also.
-//		list< int > q;
-//		q.push_back(s);
-//
-//		vector<edge>::iterator i;
-//		while (!q.empty())
-//		{
-//			int u = q.front();
-//			q.pop_front();
-//			for (i = adj[u].begin(); i != adj[u].end(); i++)
-//			{
-//				edge &e = *i;
-//				if (levels[e.to] < 0 && e.flow < e.cap)
-//				{
-//					// Level of current vertex is,
-//					// level of parent + 1
-//					levels[e.to] = levels[u] + 1;
-//
-//					q.push_back(e.to);
-//				}
-//			}
-//		}
-//
-//		// IF we can not reach to the sink we
-//		// return false else true
-//		return levels[t] < 0 ? false : true;
-//	}
-//
-//	// Returns maximum flow in graph
-//	int DinicMaxflow(int s, int t)
-//	{
-//		// Corner case
-//		if (s == t)
-//			return -1;
-//
-//		int total = 0;  // Initialize result
-//
-//						// Augment the flow while there is path
-//						// from source to sink
-//		while (BFS(s, t) == true)
-//		{
-//			// store how many edges are visited
-//			// from V { 0 to V }
-//			int *start = new int[mages_n + 1];
-//
-//			// while flow is not zero in graph from S to D
-//			while (int flow = sendFlow(s, INT_MAX, t, start))
-//
-//				// Add path flow to overall flow
-//				total += flow;
-//		}
-//
-//		// return maximum flow
-//		return total;
-//	}
-//
-//	void add_edge_and_rev(int from, int to, int cap)
-//	{
-//		// Forward edge : 0 flow and C capacity
-//		edge a{ to, 0, cap, adj[to].size() };
-//
-//		// Back edge : 0 flow and 0 capacity
-//		edge b{ from, 0, 0, adj[from].size() };
-//
-//		adj[from].push_back(a);
-//		adj[to].push_back(b); // reverse edge
-//	}
-//
-//public:
-//	Graph()
-//	{
-//		ifstream input;
-//		input.open(iname);
-//		input >> mages_n;
-//		for (int i = 0; i < mages_n; i++)
-//		{
-//			mage m;
-//			input >> m.req_e;
-//			input >> m.dg;
-//			input >> m.n;
-//			mages.push_back(m);
-//		}
-//
-//		adj.resize(mages_n + 1);
-//		levels.resize(mages_n + 1);
-//
-//		for (int i = 0; i < mages_n; i++)
-//		{
-//			for (int j = 0; j < mages[i].n; j++)
-//			{
-//				int to, cap;
-//				input >> to;
-//				input >> cap;
-//				add_edge_and_rev(i, to, cap);
-//				//adj[i].push_back({tt, 0, tc, 0});
-//			}
-//
-//			//if (mages[i].dg)
-//			//	adj[i].push_back({ mages_n, -1, INT_MAX, -1 });
-//		}
-//		input.close();
-//	}
-//
-//	void out()
-//	{
-//
-//		make_f_sink();
-//		/*bool BFS(int s, int t);
-//		int sendFlow(int s, int flow, int t, int ptr[]);
-//		int DinicMaxflow(int s, int t);*/
-//		int t = DinicMaxflow(0, mages_n);
-//		ofstream output;
-//		output.open(oname);
-//		output.clear();
-//		output.close();
-//	}
-//};
-//
-//
-//
-//int main()
-//{
-//	Graph graph = Graph();
-//	graph.out();
-//	getchar();
-//
-//}
+#include<fstream>
+#include<vector>
+#include<climits>
+#include<iterator>
+#include<list>
+#include<algorithm>
+
+using namespace std;
+
+string const iname = "input.txt";
+string const oname = "output.txt";
+
+class Graph
+{
+private:
+	struct edge
+	{
+		int from;
+		int to;
+		int cap;
+		int flow;
+	};
+
+	struct mage
+	{
+		int req_e;
+		bool dg;
+		int n;
+	};
+
+	int mages_n; // number of mages
+	int src;
+	int snk;
+	vector<edge> edges; //e
+	vector<vector<int>> adj; //g
+	vector<int> queue; //q
+	vector<int> levels; //d
+
+	//ptr??
+	vector<int> ptr;
+
+	vector<mage> mages;
+
+	void make_f_sink()
+	{
+		for (int i = 1; i < mages_n; i++)
+			add_edge_and_rev(i, mages_n, mages[i].req_e);
+	}
+
+	//DONE
+	bool bfs()
+	{
+		int qh = 0, qt = 0;
+		queue[qt++] = src;
+		for (int i = 0; i <= mages_n; i++)
+			levels[i] = -1;
+		levels[src] = 0;
+		while (qh < qt && levels[snk] == -1) {
+			int v = queue[qh++];
+			for (size_t i = 0; i < adj[v].size(); ++i) {
+				int id = adj[v][i],
+					to = edges[id].to; // edges[id].b
+				if (levels[to] == -1 && edges[id].flow < edges[id].cap) {
+					queue[qt++] = to;
+					levels[to] = levels[v] + 1;
+				}
+			}
+		}
+		return levels[snk] != -1;
+	}
+
+	// DONE
+	int dfs(int v, int flow) {
+		if (!flow)  return 0;
+		if (v == snk)  return flow;
+		for (; ptr[v] < (int)adj[v].size(); ++ptr[v]) {
+			int id = adj[v][ptr[v]],
+				to = edges[id].to; // edges[id].b
+			if (levels[to] != levels[v] + 1)  continue;
+			int pushed = dfs(to, min(flow, edges[id].cap - edges[id].flow));
+			if (pushed) {
+				edges[id].flow += pushed;
+				edges[id ^ 1].flow -= pushed;
+				return pushed;
+			}
+		}
+		return 0;
+	}
+
+	//DONE
+	int dinic() 
+	{
+		int flow = 0;
+		for (;;) {
+			if (!bfs())  break;
+			for (int i = 0; i <= mages_n; i++)
+				ptr[i] = 0;
+			while (int pushed = dfs(src, INT_MAX))
+				flow += pushed;
+		}
+		return flow;
+	}
+
+	//DONE
+	void add_edge_and_rev(int from, int to, int cap)
+	{
+		edge e1 = { from, to, cap, 0 }; // forward
+		edge e2 = { to, from, 0, 0 }; // reverse
+		adj[from].push_back((int)edges.size());
+		edges.push_back(e1);
+		adj[to].push_back((int)edges.size());
+		edges.push_back(e2);
+	}
+
+
+
+public:
+	Graph()
+	{
+		ifstream input;
+		input.open(iname);
+		input >> mages_n;
+		for (int i = 0; i < mages_n; i++)
+		{
+			mage m;
+			input >> m.req_e;
+			input >> m.dg;
+			input >> m.n;
+			mages.push_back(m);
+		}
+
+		//++mages_n;
+
+		src = 0;
+		snk = mages_n;
+
+		adj.resize(mages_n + 1);
+		levels.resize(mages_n + 1);
+		ptr.resize(mages_n + 1);
+		queue.resize(mages_n + 1);
+
+		for (int i = 0; i < mages_n; i++)
+		{
+			for (int j = 0; j < mages[i].n; j++)
+			{
+				int to, cap;
+				input >> to;
+				input >> cap;
+				add_edge_and_rev(i, to, cap);
+			}
+		}
+		input.close();
+	}
+
+	void out()
+	{
+
+		make_f_sink();
+		/*bool BFS(int s, int t);
+		int sendFlow(int s, int flow, int t, int ptr[]);
+		int DinicMaxflow(int s, int t);*/
+		int t = dinic();
+		ofstream output;
+		output.open(oname);
+		output.clear();
+		output << t;
+		output.close();
+	}
+};
+
+
+
+int main()
+{
+	Graph graph = Graph();
+	graph.out();
+	getchar();
+
+}

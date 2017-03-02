@@ -18,8 +18,5 @@
     <ClCompile Include="flow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="you wouldnt download a dinic.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
