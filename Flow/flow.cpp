@@ -41,6 +41,32 @@ private:
 
 	vector<mage> mages;
 
+	//last (mages_n - 1)*2 edges are fake
+
+	void remove_fictive_edges()
+	{
+		edges.resize(edges.size() - (mages_n - 1) * 2);
+	}
+
+	void recount_caps()
+	{
+		for (int i = 0; i < edges.size(); i += 2)
+			edges[i].cap -= edges[i].flow;
+	}
+
+	void reset_flow()
+	{
+		for (edge &e : edges)
+			e.flow = 0;
+	}
+
+	void add_dg()
+	{
+		for (int i = 0; i < mages_n; i++)
+			if (mages[i].dg)
+				add_edge_and_rev(i, mages_n, INT_MAX);
+	}
+
 	void make_f_sink()
 	{
 		for (int i = 1; i < mages_n; i++)
@@ -152,6 +178,7 @@ public:
 		input.close();
 	}
 
+	
 	void out()
 	{
 
@@ -159,6 +186,11 @@ public:
 		/*bool BFS(int s, int t);
 		int sendFlow(int s, int flow, int t, int ptr[]);
 		int DinicMaxflow(int s, int t);*/
+		dinic();
+		remove_fictive_edges();
+		recount_caps();
+		reset_flow();
+		add_dg();
 		int t = dinic();
 		ofstream output;
 		output.open(oname);
