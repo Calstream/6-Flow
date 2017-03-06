@@ -204,6 +204,11 @@ public:
 		output.close();
 	}
 
+	void f()
+	{
+
+	}
+
 	void out()
 	{
 		edges = edges_init;
@@ -232,7 +237,67 @@ public:
 				second_dinic_out();
 			else                // VSE OCHEN PLOHO
 			{
-				
+				vector<int> tbd;
+				for (int mn : outdg0)
+					for (int j = 0; j < edges.size() - (mages_n) * 2; j+=2) // OSTOROXHNO POXHALUISTA
+						if (edges[j].to == mn && edges[j].flow != 0)
+						{
+							tbd.push_back(j);
+							tbd.push_back(j+1);
+						}
+
+				vector<edge> new_edges; // some removed
+				for (int i = 0; i < edges.size() - (mages_n-1)*2; i+=2)
+				{
+					if (find(tbd.begin(), tbd.end(), i) == tbd.end())
+						new_edges.push_back(edges[i]);
+				}
+
+				for (int i = 0; i < new_edges.size(); i++)
+					new_edges[i].flow = 0;
+////////////
+				edges.clear();
+				for(auto &a: adj)
+					a.clear();
+				for (int i = 0; i < new_edges.size(); i++)
+				{
+					int f = new_edges[i].from;
+					int t = new_edges[i].to;
+					int c = new_edges[i].cap;
+					add_edge_and_rev(f, t, c, false);
+				}
+
+				auto adj_copy = adj;
+				auto edges_copy = edges;
+
+				make_f_sink();
+				//edges = new_edges;
+				//adj = adj_init;
+				/*for (int i = 0; i < tbd.size(); i++)
+					for (auto a : adj)
+						remove(a.begin(), a.end(), tbd[i]);*/
+////////////				
+				int temp = dinic();
+
+				for (int i = 0; i < edges.size(); i += 2)
+					edges[i].cap -= edges[i].flow;
+				for (int i = 0; i < edges.size(); i++)
+					edges[i].flow = 0;
+				edges.resize(edges.size() - (mages_n - 1) * 2); // !
+				adj = adj_copy;
+
+				for (int i = 0; i < mages_n; i++)
+					if (mages[i].dg)
+						add_edge_and_rev(i, mages_n, INT_MAX, false);
+
+				//getchar();
+				int t = dinic();
+
+				ofstream output;
+				output.open(oname);
+				output.clear();
+				output << t;
+				output.close();
 			}
 		}
 	}
