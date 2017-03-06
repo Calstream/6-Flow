@@ -1,4 +1,4 @@
-﻿#include<fstream>
+#include<fstream>
 #include<vector>
 #include<climits>
 #include<iterator>
@@ -26,70 +26,53 @@ private:
 		int req_e;
 		bool dg;
 		int n;
-		int indegree;
 	};
 
 	int mages_n; // number of mages
 	int src;
 	int snk;
-	vector<edge> edges_init; 
-	vector<vector<int>> adj_init; 
-	vector<edge> edges;
-	vector<vector<int>> adj;
-	vector<int> queue; 
-	vector<int> levels; 
+	vector<edge> edges; //e
+	vector<vector<int>> adj; //g
+	vector<int> queue; //q
+	vector<int> levels; //d
 	int valid_edges;
-	vector<int> ptr;
-	vector<mage> mages;
-	//vector<int> outdegree;
 
-	int outdg;
-	int in;
+
+	//ptr??
+	vector<int> ptr;
+
+	vector<mage> mages;
+
+	//last (mages_n - 1)*2 edges are fake
+
+	void remove_fictive_edges()
+	{
+		edges.resize(edges.size() - (mages_n - 1) * 2);
+	}
 
 	void recount_caps()
 	{
-		for (int i = 0; i < edges_init.size(); i += 2)
-			edges_init[i].cap -= edges[i].flow;
+		for (int i = 0; i < edges.size(); i += 2)
+			edges[i].cap -= edges[i].flow;
+	}
+
+	void reset_flow()
+	{
+		for (edge &e : edges)
+			e.flow = 0;
 	}
 
 	void add_dg()
 	{
-		edges.clear();
-		adj.clear();
-		edges = edges_init;
-		adj = adj_init;
 		for (int i = 0; i < mages_n; i++)
 			if (mages[i].dg)
-				add_edge_and_rev(i, mages_n, INT_MAX, false);
+				add_edge_and_rev(i, mages_n, INT_MAX);
 	}
 
 	void make_f_sink()
 	{
-		/*edges = edges_init;
-		adj = adj_init;*/
 		for (int i = 1; i < mages_n; i++)
-			add_edge_and_rev(i, mages_n, mages[i].req_e, false);
-	}
-
-	//DONE
-	void add_edge_and_rev(int from, int to, int cap, bool init)
-	{
-		edge e1 = { from, to, cap, 0 }; // forward
-		edge e2 = { to, from, 0, 0 }; // reverse
-		if (init)
-		{
-			adj_init[from].push_back((int)edges_init.size());
-			edges_init.push_back(e1);
-			adj_init[to].push_back((int)edges_init.size());
-			edges_init.push_back(e2);
-		}
-		else
-		{
-			adj[from].push_back((int)edges.size());
-			edges.push_back(e1);
-			adj[to].push_back((int)edges.size());
-			edges.push_back(e2);
-		}
+			add_edge_and_rev(i, mages_n, mages[i].req_e);
 	}
 
 	//DONE
@@ -103,8 +86,8 @@ private:
 		while (qh < qt && levels[snk] == -1) {
 			int v = queue[qh++];
 			for (size_t i = 0; i < adj[v].size(); ++i) {
-				int id = adj[v][i];
-				int to = edges[id].to;
+				int id = adj[v][i],
+					to = edges[id].to; // edges[id].b
 				if (levels[to] == -1 && edges[id].flow < edges[id].cap) {
 					queue[qt++] = to;
 					levels[to] = levels[v] + 1;
@@ -120,7 +103,7 @@ private:
 		if (v == snk)  return flow;
 		for (; ptr[v] < (int)adj[v].size(); ++ptr[v]) {
 			int id = adj[v][ptr[v]],
-				to = edges[id].to;
+				to = edges[id].to; // edges[id].b
 			if (levels[to] != levels[v] + 1)  continue;
 			int pushed = dfs(to, min(flow, edges[id].cap - edges[id].flow));
 			if (pushed) {
@@ -135,7 +118,7 @@ private:
 	//DONE
 	int dinic() 
 	{
-		int flow = 0;
+		int flow = 0; // 0
 		for (;;) {
 			if (!bfs())  break;
 			for (int i = 0; i <= mages_n; i++)
@@ -145,6 +128,19 @@ private:
 		}
 		return flow;
 	}
+
+	//DONE
+	void add_edge_and_rev(int from, int to, int cap)
+	{
+		edge e1 = { from, to, cap, 0 }; // forward
+		edge e2 = { to, from, 0, 0 }; // reverse
+		adj[from].push_back((int)edges.size());
+		edges.push_back(e1);
+		adj[to].push_back((int)edges.size());
+		edges.push_back(e2);
+	}
+
+
 
 public:
 	Graph()
@@ -160,11 +156,13 @@ public:
 			input >> m.n;
 			mages.push_back(m);
 		}
+
+		//++mages_n;
+
 		src = 0;
 		snk = mages_n;
 
 		adj.resize(mages_n + 1);
-		adj_init.resize(mages_n + 1);
 		levels.resize(mages_n + 1);
 		ptr.resize(mages_n + 1);
 		queue.resize(mages_n + 1);
@@ -182,64 +180,54 @@ public:
 				int to, cap;
 				input >> to;
 				input >> cap;
-				mages[to].indegree += 1;
-				add_edge_and_rev(i, to, cap, true);
+				add_edge_and_rev(i, to, cap);
 				valid_edges++;
 			}
 		}
 		input.close();
 	}
-	
-	void second_dinic_out()
-	{
-		recount_caps();
-		add_dg();
-		for (int i = 0; i < queue.size(); i++)
-			queue[i] = 0;
-		int t = dinic();
-		ofstream output;
-		output.open(oname);
-		output.clear();
-		output << t;
-		output.close();
-	}
 
+	
 	void out()
 	{
-		edges = edges_init;
-		adj = adj_init;
+
 		make_f_sink();
+		/*bool BFS(int s, int t);
+		int sendFlow(int s, int flow, int t, int ptr[]);
+		int DinicMaxflow(int s, int t);*/
 		dinic();
-		bool d = false;
+		//last (mages_n - 1)*2 edges are fake
 		for (int i = valid_edges*2; i < edges.size(); i+=2)
-			if (edges[i].flow != edges[i].cap) // если по какому-то из ребер в фиктивный сток прошло меньше 
-			{								   // энергии чем capacity, значит кто-то из магов умер
+			if (edges[i].flow != edges[i].cap)
+			{
 				ofstream output;
 				output.open(oname);
 				output.clear();
 				output << -1;
-				d = true;
+				return;
 			}
-		if (!d)
-		{
-			vector<int> outdg0;
-			for(int i = 0; i < mages.size(); i++)
-				if (mages[i].n == 0 && mages[i].dg == 0 && mages[i].indegree > 1)
-				{
-					outdg0.push_back(i);
-				}
-			if (outdg0.empty()) // vse ok
-				second_dinic_out();
-			else                // VSE OCHEN PLOHO
-			{
-				
-			}
-		}
+
+		remove_fictive_edges();
+		recount_caps();
+		reset_flow();
+		add_dg();
+		int t = dinic();
+		ofstream output;
+		output.open(oname);
+		//output.clear();
+		//if (t != 0)
+		output << t;
+		//else output << -1;
+		output.close();
 	}
 };
+
+
 
 int main()
 {
 	Graph graph = Graph();
 	graph.out();
+	//getchar();
+
 }
