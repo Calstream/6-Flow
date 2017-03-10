@@ -41,7 +41,7 @@ private:
 	int valid_edges;
 	vector<int> ptr;
 	vector<mage> mages;
-	//vector<int> outdegree;
+	vector<int> outdg0;
 
 	int outdg;
 	int in;
@@ -65,8 +65,6 @@ private:
 
 	void make_f_sink()
 	{
-		/*edges = edges_init;
-		adj = adj_init;*/
 		for (int i = 1; i < mages_n; i++)
 			add_edge_and_rev(i, mages_n, mages[i].req_e, false);
 	}
@@ -162,7 +160,7 @@ public:
 		}
 		src = 0;
 		snk = mages_n;
-
+		valid_edges = 0;
 		adj.resize(mages_n + 1);
 		adj_init.resize(mages_n + 1);
 		levels.resize(mages_n + 1);
@@ -204,9 +202,62 @@ public:
 		output.close();
 	}
 
-	void f()
+	void redirect() // ветка где все сложно
 	{
+		vector<int> tbd;
+		for (int mn : outdg0)
+			for (int j = 0; j < edges.size() - (mages_n) * 2; j += 2)
+				if (edges[j].to == mn && edges[j].flow != 0)
+				{
+					tbd.push_back(j);
+					tbd.push_back(j + 1);
+				}
 
+		vector<edge> new_edges; // some removed
+		for (int i = 0; i < edges.size() - (mages_n - 1) * 2; i += 2)
+		{
+			if (find(tbd.begin(), tbd.end(), i) == tbd.end())
+				new_edges.push_back(edges[i]);
+		}
+
+		for (int i = 0; i < new_edges.size(); i++)
+			new_edges[i].flow = 0;
+
+		edges.clear();
+		for (auto &a : adj)
+			a.clear();
+		for (int i = 0; i < new_edges.size(); i++)
+		{
+			int f = new_edges[i].from;
+			int t = new_edges[i].to;
+			int c = new_edges[i].cap;
+			add_edge_and_rev(f, t, c, false);
+		}
+
+		auto adj_copy = adj;
+		auto edges_copy = edges;
+
+		make_f_sink();			
+		int temp = dinic();
+
+		for (int i = 0; i < edges.size(); i += 2)
+			edges[i].cap -= edges[i].flow;
+		for (int i = 0; i < edges.size(); i++)
+			edges[i].flow = 0;
+		edges.resize(edges.size() - (mages_n - 1) * 2); // !
+		adj = adj_copy;
+
+		for (int i = 0; i < mages_n; i++)
+			if (mages[i].dg)
+				add_edge_and_rev(i, mages_n, INT_MAX, false);
+
+		int t = dinic();
+
+		ofstream output;
+		output.open(oname);
+		output.clear();
+		output << t;
+		output.close();
 	}
 
 	void out()
@@ -216,90 +267,23 @@ public:
 		make_f_sink();
 		dinic();
 		bool d = false;
-		for (int i = valid_edges*2; i < edges.size(); i+=2)
-			if (edges[i].flow != edges[i].cap) // если по какому-то из ребер в фиктивный сток прошло меньше 
+		for (int i = 0; i < edges.size(); i++)
+			if (i > valid_edges * 2 && edges[i].flow >= 0 && edges[i].flow != edges[i].cap) // если по какому-то из ребер в фиктивный сток прошло меньше 
 			{								   // энергии чем capacity, значит кто-то из магов умер
 				ofstream output;
 				output.open(oname);
 				output.clear();
 				output << -1;
-				d = true;
+				return;
 			}
-		if (!d)
-		{
-			vector<int> outdg0;
-			for(int i = 0; i < mages.size(); i++)
-				if (mages[i].n == 0 && mages[i].dg == 0 && mages[i].indegree > 1)
-				{
+		// ветка где никто не умер
+		for (int i = 0; i < mages.size(); i++)
+			if (mages[i].n == 0 && mages[i].dg == 0 && mages[i].indegree > 1)
 					outdg0.push_back(i);
-				}
-			if (outdg0.empty()) // vse ok
-				second_dinic_out();
-			else                // VSE OCHEN PLOHO
-			{
-				vector<int> tbd;
-				for (int mn : outdg0)
-					for (int j = 0; j < edges.size() - (mages_n) * 2; j+=2) // OSTOROXHNO POXHALUISTA
-						if (edges[j].to == mn && edges[j].flow != 0)
-						{
-							tbd.push_back(j);
-							tbd.push_back(j+1);
-						}
-
-				vector<edge> new_edges; // some removed
-				for (int i = 0; i < edges.size() - (mages_n-1)*2; i+=2)
-				{
-					if (find(tbd.begin(), tbd.end(), i) == tbd.end())
-						new_edges.push_back(edges[i]);
-				}
-
-				for (int i = 0; i < new_edges.size(); i++)
-					new_edges[i].flow = 0;
-////////////
-				edges.clear();
-				for(auto &a: adj)
-					a.clear();
-				for (int i = 0; i < new_edges.size(); i++)
-				{
-					int f = new_edges[i].from;
-					int t = new_edges[i].to;
-					int c = new_edges[i].cap;
-					add_edge_and_rev(f, t, c, false);
-				}
-
-				auto adj_copy = adj;
-				auto edges_copy = edges;
-
-				make_f_sink();
-				//edges = new_edges;
-				//adj = adj_init;
-				/*for (int i = 0; i < tbd.size(); i++)
-					for (auto a : adj)
-						remove(a.begin(), a.end(), tbd[i]);*/
-////////////				
-				int temp = dinic();
-
-				for (int i = 0; i < edges.size(); i += 2)
-					edges[i].cap -= edges[i].flow;
-				for (int i = 0; i < edges.size(); i++)
-					edges[i].flow = 0;
-				edges.resize(edges.size() - (mages_n - 1) * 2); // !
-				adj = adj_copy;
-
-				for (int i = 0; i < mages_n; i++)
-					if (mages[i].dg)
-						add_edge_and_rev(i, mages_n, INT_MAX, false);
-
-				//getchar();
-				int t = dinic();
-
-				ofstream output;
-				output.open(oname);
-				output.clear();
-				output << t;
-				output.close();
-			}
-		}
+		if (outdg0.empty()) //  ок
+			second_dinic_out();
+		else                // сложно
+			redirect();
 	}
 };
 
